@@ -1,0 +1,40 @@
+name: PWA API Key Injection and Deployment
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to the main branch
+  workflow_dispatch: # Allows manual trigger from the Actions tab
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    environment: github-pages # Explicitly targets the GitHub Pages environment
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    # 🔑 STEP 1: Inject API Key into app.js
+    - name: Inject Google API Key Secret
+      run: |
+        # Use 'sed' to replace the placeholder with the actual secret value.
+        # This modification happens *before* deployment and is temporary to the runner.
+        sed -i "s|___INJECT_GOOGLE_API_KEY___|${{ secrets.GOOGLE_API_KEY }}|g" app.js
+        
+        echo "API Key successfully injected into app.js."
+        echo "Example of injected key fragment: ${GOOGLE_API_KEY:0:5}..."
+
+    # 🚀 STEP 2: Deploy to GitHub Pages
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        # Uses the default GITHUB_TOKEN which has permission to deploy to Pages
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        # Tells the action to deploy the root directory where the modified app.js sits
+        publish_dir: ./
