@@ -1,535 +1,353 @@
-const { useState, useEffect, useRef } = React;
+const { useState, useEffect } = React;
 
-// --- ICON COMPONENTS ---
-const XIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="6" x2="6" y2="18"></line>
-    <line x1="6" y1="6" x2="18" y2="18"></line>
-  </svg>
-);
+// --- ICONS (Optimized size) ---
+const Icons = {
+  X: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
+  Plus: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
+  Edit: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>,
+  Trash: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
+  Save: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>,
+  ChevronDown: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>,
+  ChevronUp: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>,
+  Camera: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>,
+  Upload: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 7.5"></path><path d="M12 16v6"></path><path d="M15 19l-3 3-3-3"></path></svg>
+};
 
-const PlusIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="12" y1="5" x2="12" y2="19"></line>
-    <line x1="5" y1="12" x2="19" y2="12"></line>
-  </svg>
-);
-
-const Edit2Icon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
-  </svg>
-);
-
-const Trash2Icon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="3 6 5 6 21 6"></polyline>
-    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-  </svg>
-);
-
-const SaveIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-    <polyline points="17 21 17 13 7 13 7 21"></polyline>
-    <polyline points="7 3 7 8 15 8"></polyline>
-  </svg>
-);
-
-const ChevronDownIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="6 9 12 15 18 9"></polyline>
-  </svg>
-);
-
-const ChevronUpIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="18 15 12 9 6 15"></polyline>
-  </svg>
-);
-
-const CameraIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-    <circle cx="12" cy="13" r="3" />
-  </svg>
-);
-
-const UploadCloudIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 7.5"></path>
-    <path d="M12 16v6"></path>
-    <path d="M15 19l-3 3-3-3"></path>
-  </svg>
-);
-
-// --- LOCAL STORAGE UTILITY ---
-
+// --- STORAGE ---
 const storage = {
-  get: async (key) => {
-    try {
-      const value = localStorage.getItem(key);
-      return value ? { key, value } : null;
-    } catch (e) {
-      return null;
-    }
-  },
-  set: async (key, value) => {
-    try {
-      localStorage.setItem(key, value);
-      return { key, value };
-    } catch (e) {
-      return null;
-    }
-  }
+  get: (key) => { try { return localStorage.getItem(key) } catch(e) { return null } },
+  set: (key, val) => { try { localStorage.setItem(key, val) } catch(e) {} }
 };
 
-// --- BASE64 PLACEHOLDERS (UNIQUE FOR EACH ITEM) ---
-
-const placeholderImages = {
-  flower1: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIyNSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4gIDxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjI1IiBmaWxsPSIjRjBGMEYwIi8+ICA8dGV4dCB4PSIxNTAiIHk9IjExMi41IiBmb250LWZhbWlseT0iSmV0QnJhaW5zIE1vbm8sIG1vbm9zcGFjZSIgZm9udC1zaXplPSIxNnB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iIzAwMDAwMCI+e0ZMT1dFUiBQSENEU108L3RleHQ+PC9zdmc+",
-  edible1: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIyNSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4gIDxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjI1IiBmaWxsPSIjRjAwMDAwIi8+ICA8dGV4dCB4PSIxNTAiIHk9IjExMi41IiBmb250LWZhbWlseT0iSmV0QnJhaW5zIE1vbm8sIG1vbm9zcGFjZSIgZm9udC1zaXplPSIxNnB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iI0ZGRkZGRiI+e0VESUJMRVMgUEhDREVTfTwvdGV4dD48L3N2Zz4=",
-  concentrate1: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIyNSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4gIDxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjI1IiBmaWxsPSIjRkZGMjAwIi8+ICA8dGV4dCB4PSIxNTAiIHk9IjExMi41IiBmb250LWZhbWlseT0iSmV0QnJhaW5zIE1vbm8sIG1vbm9zcGFjZSIgZm9udC1zaXplPSIxNnB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iIzAwMDAwMCI+e0NPTkNFTlRSQVRFUyBQSENEU108L3RleHQ+PC9zdmc+=",
-  vape1: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIyNSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4gIDxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjI1IiBmaWxsPSIjQ0NDQ0NDIi8+ICA8dGV4dCB4PSIxNTAiIHk9IjExMi41IiBmb250LWZhbWlseT0iSmV0QnJhaW5zIE1vbm8sIG1vbm9zcGFjZSIgZm9udC1zaXplPSIxNnB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iIzAwMDAwMCI+e1ZBUkVfUEhDREVTfTwvdGV4dD48L3N2Zz4=",
-  topical1: "data:image:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIyNSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4gIDxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjI1IiBmaWxsPSIjMDBEMDBEIi8+ICA8dGV4dCB4PSIxNTAiIHk9IjExMi41IiBmb250LWZhbWlseT0iSmV0QnJhaW5zIE1vbm8sIG1vbm9zcGFjZSIgZm9udC1zaXplPSIxNnB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iI0ZGRkZGRiI+e1RPUElDQUxTIFBIQ0RFTFN9PC90ZXh0Pjwvc3ZnPg=="
+// --- DATA: Placeholders with Base64 Images ---
+const PLACEHOLDERS = {
+  flower: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmZmIi8+PHBhdGggZD0iTTE1MCA1MCBMIDE3MCA5MCBMIDIxMCAxMDAgTCAxODAgMTMwIEwgMTkwIDE3MCBMIDE1MCAxNTAgTCAxMTAgMTcwIEwgMTIwIDEzMCBMIDkwIDEwMCBMIDEzMCA5MCBaIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIvPjx0ZXh0IHg9IjE1MCIgeT0iMTkwIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5GTE9XRVI8L3RleHQ+PC9zdmc+",
+  edible: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iMTUwIiBjeT0iMTAwIiByPSI0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIiLz48dGV4dCB4PSIxNTAiIHk9IjE3MCIgZm9udC1mYW1pbHk9Im1vbm9zcGFjZSIgZm9udC1zaXplPSIxNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+RURJQkxFPC90ZXh0Pjwvc3ZnPg==",
+  extract: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmZmIi8+PHBhdGggZD0iTTE1MCA2MCBMIDE5MCAxMDAgTCAxNTAgMTQwIEwgMTEwIDEwMCBaIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIvPjx0ZXh0IHg9IjE1MCIgeT0iMTcwIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5FWFRSQUNUPC90ZXh0Pjwvc3ZnPg=="
 };
 
-
-// --- ADMIN IMAGE INPUT COMPONENT (PWA Camera/Local Upload) ---
-
+// --- COMPONENT: Image Input ---
 const ImageInput = ({ value, onChange }) => {
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        onChange(reader.result); // Store as Base64 string
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  const trigger = (capture) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    if(capture) input.setAttribute('capture', capture);
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onloadend = () => onChange(reader.result);
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
 
-  const triggerInput = (accept, capture = null) => {
-    const tempInput = document.createElement('input');
-    tempInput.type = 'file';
-    tempInput.accept = accept;
-    if (capture) {
-      tempInput.setAttribute('capture', capture);
-    }
-    tempInput.onchange = handleFileChange;
-    tempInput.click();
-  };
-
-  return (
-    <div>
-      <label className="block text-xs font-bold mb-2 text-black">Image Source:</label>
-      <div className="flex flex-col sm:flex-row gap-2 mb-2">
-        <button
-          type="button"
-          onClick={() => triggerInput('image/*', 'user')}
-          className="flex-1 text-center bg-black text-white px-3 py-2 border-2 border-black hover:bg-gray-800 transition flex items-center justify-center gap-2 text-sm"
-        >
-          <CameraIcon />
-          Snap Photo
-        </button>
-        <button
-          type="button"
-          onClick={() => triggerInput('image/*')}
-          className="flex-1 text-center bg-white text-black px-3 py-2 border-2 border-black hover:bg-gray-100 transition flex items-center justify-center gap-2 text-sm"
-        >
-          <UploadCloudIcon />
-          Local Upload
-        </button>
-      </div>
-          
-      {value && (
-        <div className="mt-4">
-          <p className="text-xs text-gray-500 mb-2">// Current Image Preview (Click image to clear)</p>
-          <div className="relative w-full h-48 border-4 border-black cursor-pointer" onClick={() => onChange('')}>
-            <img 
-              src={value} 
-              alt="Product Preview" 
-              className="w-full h-full object-cover grayscale" 
-            />
-            <span className="absolute top-2 left-2 bg-black text-white text-xs px-2 py-1 font-bold">Remove Image</span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return (
+    <div className="space-y-2">
+      <label className="block text-xs font-bold uppercase">Product Image</label>
+      <div className="grid grid-cols-2 gap-2">
+        <button onClick={() => trigger('user')} className="flex items-center justify-center gap-2 border border-black py-2 text-xs font-bold hover:bg-gray-100">
+          <Icons.Camera /> Snap
+        </button>
+        <button onClick={() => trigger(null)} className="flex items-center justify-center gap-2 border border-black py-2 text-xs font-bold hover:bg-gray-100">
+          <Icons.Upload /> Upload
+        </button>
+      </div>
+      {value && (
+        <div className="relative border border-black h-32 w-full mt-2 cursor-pointer group" onClick={() => onChange('')}>
+          <img src={value} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="text-white text-xs font-bold">REMOVE</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
+// --- APP COMPONENT ---
+const App = () => {
+  const [view, setView] = useState('menu'); // 'menu' or 'admin'
+  const [products, setProducts] = useState([]);
+  const [category, setCategory] = useState('All');
+  const [expanded, setExpanded] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editItem, setEditItem] = useState(null);
 
-// --- MAIN APPLICATION COMPONENT ---
+  // Form State
+  const [form, setForm] = useState({ name: '', category: 'Flower', price: '', thc: '', cbd: '', desc: '', image: '' });
 
-const DispensaryApp = () => {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [products, setProducts] = useState([]);
-  const [categories] = useState(['Flower', 'Edibles', 'Concentrates', 'Vapes', 'Topicals']);
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [expandedProduct, setExpandedProduct] = useState(null);
-  const [showAdminModal, setShowAdminModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
+  const categories = ['Flower', 'Edibles', 'Vapes', 'Concentrates'];
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  useEffect(() => {
+    const saved = storage.get('ft-products');
+    if (saved) {
+      setProducts(JSON.parse(saved));
+    } else {
+      const defaults = [
+        { id: '1', name: 'Blue Dream', category: 'Flower', price: '$45', thc: '22%', cbd: '<1%', desc: 'Classic sativa-dominant hybrid. Sweet berry aroma with full-body relaxation.', image: PLACEHOLDERS.flower },
+        { id: '2', name: 'Sour Diesel', category: 'Flower', price: '$50', thc: '24%', cbd: '0%', desc: 'Invigorating sativa. Pungent diesel-like aroma. Great for energy.', image: PLACEHOLDERS.flower },
+        { id: '3', name: 'Magic Gummies', category: 'Edibles', price: '$20', thc: '100mg', cbd: '0mg', desc: 'Pack of 10 watermelon gummies. 10mg THC per piece.', image: PLACEHOLDERS.edible },
+        { id: '4', name: 'Live Rosin', category: 'Concentrates', price: '$70', thc: '85%', cbd: '2%', desc: 'Solventless extract. Pure flavor and high potency.', image: PLACEHOLDERS.extract }
+      ];
+      setProducts(defaults);
+      storage.set('ft-products', JSON.stringify(defaults));
+    }
+  }, []);
 
-  const loadProducts = async () => {
-    const result = await storage.get('dispensary-products');
+  const save = (newProducts) => {
+    setProducts(newProducts);
+    storage.set('ft-products', JSON.stringify(newProducts));
+  };
 
-    if (result && result.value) {
-      setProducts(JSON.parse(result.value));
-    } else {
-      const sampleProducts = [
-        { id: '1', name: 'Blue Dream', category: 'Flower', price: '$45', thc: '18-24%', cbd: '<1%', 
-          description: 'A balanced hybrid strain with sweet berry aroma and uplifting, cerebral effects. Perfect for daytime use and creative endeavors.', 
-          image: placeholderImages.flower1 },
-        { id: '2', name: 'Sour Gummies', category: 'Edibles', price: '$25', thc: '10mg each', cbd: 'N/A', 
-          description: 'High-dose sour raspberry gummies, 10 pieces per pack (100mg total). Accurate, consistent dosage for extended relief.', 
-          image: placeholderImages.edible1 },
-        { id: '3', name: 'Live Resin', category: 'Concentrates', price: '$60', thc: '75-85%', cbd: '<1%', 
-          description: 'Premium flash-frozen live resin extract with a full spectrum terpene profile. Highly potent and best used with a dab rig or vaporizer.', 
-          image: placeholderImages.concentrate1 },
-        { id: '4', name: 'Pineapple Express Vape', category: 'Vapes', price: '$50', thc: '90%', cbd: 'N/A', 
-          description: 'A one-gram distillate cartridge featuring the popular Pineapple Express flavor. Sativa-dominant effects are energizing and focused.', 
-          image: placeholderImages.vape1 },
-        { id: '5', name: 'Relief Balm', category: 'Topicals', price: '$35', thc: '200mg', cbd: '100mg', 
-          description: 'CBD/THC infused topical cream designed for localized pain relief and inflammation. Non-psychoactive.', 
-          image: placeholderImages.topical1 }
-      ];
-      saveProducts(sampleProducts);
-      setProducts(sampleProducts);
-    }
-  };
+  const handleSave = () => {
+    if(!form.name || !form.price) return alert('Name and Price required');
+    if (editItem) {
+      save(products.map(p => p.id === editItem.id ? { ...form, id: p.id } : p));
+    } else {
+      save([...products, { ...form, id: Date.now().toString() }]);
+    }
+    closeModal();
+  };
 
-  const saveProducts = async (productsToSave) => {
-    await storage.set('dispensary-products', JSON.stringify(productsToSave));
-  };
+  const handleDelete = (id) => {
+    if(confirm('Delete item?')) save(products.filter(p => p.id !== id));
+  };
 
-  const [formData, setFormData] = useState({
-    name: '', category: 'Flower', price: '', thc: '', cbd: '', description: '', image: ''
-  });
+  const openModal = (item = null) => {
+    setEditItem(item);
+    setForm(item || { name: '', category: 'Flower', price: '', thc: '', cbd: '', desc: '', image: '' });
+    setModalOpen(true);
+  };
 
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditItem(null);
+  };
 
-  const handleImageChange = (base64Image) => {
-    setFormData({ ...formData, image: base64Image });
-  };
+  const filtered = category === 'All' ? products : products.filter(p => p.category === category);
 
-  const handleSubmit = () => {
-    if (!formData.name || !formData.category || !formData.price) {
-      alert("Product Name, Category, and Price are required.");
-      return;
-    }
+  return (
+    <div className="min-h-screen bg-white text-black font-mono selection:bg-black selection:text-white">
+      
+      {/* HEADER - Fixed Layout */}
+      <header className="sticky top-0 z-40 bg-white border-b-2 border-black">
+        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
+          <div className="min-w-0 flex-1 mr-4">
+            <h1 className="font-bold text-lg truncate leading-none">Fraction Theory</h1>
+            <p className="text-[10px] text-gray-500 truncate leading-none mt-1">Disp_Sys_v1.0</p>
+          </div>
+          <button 
+            onClick={() => setView(view === 'menu' ? 'admin' : 'menu')}
+            className="shrink-0 bg-black text-white text-[10px] font-bold px-3 py-1.5 uppercase tracking-wide active:bg-gray-800"
+          >
+            {view === 'menu' ? 'Admin Mode' : 'View Menu'}
+          </button>
+        </div>
+      </header>
 
-    if (editingProduct) {
-      const updated = products.map(p => 
-        p.id === editingProduct.id ? { ...formData, id: p.id } : p
-      );
-      setProducts(updated);
-      saveProducts(updated);
-    } else {
-      const newProduct = { ...formData, id: Date.now().toString() };
-      const updated = [...products, newProduct];
-      setProducts(updated);
-      saveProducts(updated);
-    }
-    resetForm();
-  };
+      <main className="max-w-3xl mx-auto px-4 py-6 pb-20">
+        
+        {view === 'menu' ? (
+          <>
+            {/* CATEGORIES - Horizontal Scroll */}
+            <div className="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide">
+              <button 
+                onClick={() => setCategory('All')}
+                className={`shrink-0 px-4 py-1.5 text-xs font-bold border border-black transition-colors ${category === 'All' ? 'bg-black text-white' : 'bg-white'}`}
+              >
+                All
+              </button>
+              {categories.map(cat => (
+                <button 
+                  key={cat}
+                  onClick={() => setCategory(cat)}
+                  className={`shrink-0 px-4 py-1.5 text-xs font-bold border border-black transition-colors ${category === cat ? 'bg-black text-white' : 'bg-white'}`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
 
-  const handleEdit = (product) => {
-    setEditingProduct(product);
-    setFormData(product);
-    setShowAdminModal(true);
-  };
+            {/* PRODUCT GRID */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {filtered.map(p => (
+                <div key={p.id} className="border border-black bg-white group hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-shadow duration-200">
+                  <div 
+                    className="aspect-[4/3] border-b border-black relative overflow-hidden bg-gray-50 cursor-pointer"
+                    onClick={() => setExpanded(expanded === p.id ? null : p.id)}
+                  >
+                    {p.image ? (
+                      <img src={p.image} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">NO IMG</div>
+                    )}
+                    <div className="absolute top-2 right-2 bg-black text-white text-xs font-bold px-2 py-0.5">
+                      {p.price}
+                    </div>
+                  </div>
+                  
+                  <div className="p-3">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-bold text-sm leading-tight">{p.name}</h3>
+                      <button onClick={() => setExpanded(expanded === p.id ? null : p.id)}>
+                        {expanded === p.id ? <Icons.ChevronUp /> : <Icons.ChevronDown />}
+                      </button>
+                    </div>
+                    
+                    <div className="flex gap-2 text-[10px] font-bold text-gray-600 mb-2">
+                      <span className="border border-gray-300 px-1.5 py-0.5 rounded-sm">{p.category}</span>
+                      {p.thc && <span className="border border-gray-300 px-1.5 py-0.5 rounded-sm">THC: {p.thc}</span>}
+                    </div>
 
-  const handleDelete = (id) => {
-    if (window.confirm("Confirm Delete?")) {
-      const updated = products.filter(p => p.id !== id);
-      setProducts(updated);
-      saveProducts(updated);
-    }
-  };
+                    {expanded === p.id && (
+                      <p className="text-xs text-gray-600 leading-relaxed border-t border-gray-100 pt-2 mt-2">
+                        {p.desc || "No description available."}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {filtered.length === 0 && (
+              <div className="text-center py-12 text-gray-400 text-sm border border-dashed border-gray-300">
+                No products found in {category}
+              </div>
+            )}
+          </>
+        ) : (
+          /* ADMIN VIEW */
+          <div className="space-y-4">
+            <div className="flex justify-between items-end border-b border-black pb-2 mb-4">
+              <h2 className="text-sm font-bold uppercase">Inventory</h2>
+              <button onClick={() => openModal()} className="flex items-center gap-1 bg-black text-white text-[10px] font-bold px-3 py-1.5">
+                <Icons.Plus /> Add Item
+              </button>
+            </div>
 
-  const resetForm = () => {
-    setFormData({ name: '', category: 'Flower', price: '', thc: '', cbd: '', description: '', image: '' });
-    setEditingProduct(null);
-    setShowAdminModal(false);
-  };
+            <div className="border border-black divide-y divide-black bg-white">
+              {products.map(p => (
+                <div key={p.id} className="flex items-center p-2 gap-3 h-16">
+                  {/* Fixed width image container */}
+                  <div className="w-10 h-10 shrink-0 bg-gray-100 border border-gray-200 overflow-hidden">
+                    {p.image && <img src={p.image} className="w-full h-full object-cover" />}
+                  </div>
+                  
+                  {/* Flexible text container with min-w-0 for truncation */}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-xs truncate">{p.name}</div>
+                    <div className="text-[10px] text-gray-500 truncate">{p.category} • {p.price}</div>
+                  </div>
 
-  const filteredProducts = selectedCategory === 'All' 
-    ? products 
-    : products.filter(p => p.category === selectedCategory);
+                  {/* Fixed width buttons */}
+                  <div className="flex gap-2 shrink-0">
+                    <button onClick={() => openModal(p)} className="p-1.5 border border-black hover:bg-black hover:text-white transition-colors">
+                      <Icons.Edit />
+                    </button>
+                    <button onClick={() => handleDelete(p.id)} className="p-1.5 border border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-colors">
+                      <Icons.Trash />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {products.length === 0 && <div className="p-4 text-center text-xs text-gray-500">Inventory Empty</div>}
+            </div>
+          </div>
+        )}
+      </main>
 
-  return (
-    <div className="min-h-dvh bg-white text-black font-mono">
-      {/* Header */}
-      <div className="bg-white text-black border-b-4 border-black sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-                Fraction Theory Dispensary
-              </h1>
-              <p className="text-gray-600 text-xs mt-1 tracking-wide">
-                &gt; menu\_products.query()
-              </p>
-            </div>
-            <button
-              onClick={() => setIsAdmin(!isAdmin)}
-              className="bg-black text-white px-2 py-1 font-bold text-xs sm:text-sm hover:bg-gray-800 transition border-2 border-black flex-shrink-0" // Added flex-shrink-0
-            >
-              {isAdmin ? 'Menu' : 'Admin Mode'}
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* MODAL */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={closeModal} />
+          
+          <div className="relative bg-white w-full max-w-lg border-t-2 sm:border-2 border-black p-4 sm:p-6 shadow-2xl animate-slide-up sm:animate-none max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="font-bold text-lg uppercase">{editItem ? 'Edit Item' : 'New Item'}</h3>
+              <button onClick={closeModal}><Icons.X /></button>
+            </div>
 
-      {!isAdmin ? (
-        /* Customer Menu View */
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          {/* Category Filter - Horizontal Scroll */}
-          <div className="mb-8 flex gap-2 overflow-x-auto pb-2 border-b-2 border-gray-200">
-            <button
-              onClick={() => setSelectedCategory('All')}
-              className={`px-3 py-1 font-semibold text-xs whitespace-nowrap transition border-2 border-black ${
-                selectedCategory === 'All'
-                  ? 'bg-black text-white'
-                  : 'bg-white text-black hover:bg-gray-100'
-              }`}
-            >
-              All
-            </button>
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1 font-semibold text-xs whitespace-nowrap transition border-2 border-black ${
-                  selectedCategory === cat
-                    ? 'bg-black text-white'
-                    : 'bg-white text-black hover:bg-gray-100'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+            <div className="space-y-4">
+              <ImageInput value={form.image} onChange={val => setForm({...form, image: val})} />
 
-          {/* Products Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProducts.map(product => (
-              <div
-                key={product.id}
-                className="bg-white border-4 border-black hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition cursor-pointer"
-                onClick={() => setExpandedProduct(expandedProduct === product.id ? null : product.id)}
-              >
-                <div className="relative h-48 overflow-hidden border-b-4 border-black">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition duration-300"
-                  />
-                  <div className="absolute top-3 right-3 bg-black text-white px-3 py-1 font-bold text-sm border-2 border-white">
-                    {product.price}
-                  </div>
-                </div>
-                <div className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold tracking-tight">{product.name}</h3>
-                    <div className="ml-2 flex-shrink-0">
-                      {expandedProduct === product.id ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                    </div>
-                  </div>
-                  <span className="inline-block bg-gray-100 text-black px-2 py-1 text-xs font-bold mb-3 border border-black">
-                    {product.category}
-                  </span>
-                  <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
-                    <div className="border-2 border-black p-2 bg-gray-50">
-                      <div className="text-gray-500 font-semibold">THC:</div>
-                      <div className="font-bold">{product.thc}</div>
-                    </div>
-                    <div                       className="border-2 border-black p-2 bg-gray-50">
-                      <div className="text-gray-500 font-semibold">CBD:</div>
-                      <div className="font-bold">{product.cbd}</div>
-                    </div>
-                  </div>
-                  {expandedProduct === product.id && (
-                    <div className="mt-4 pt-4 border-t-2 border-black">
-                      <p className="text-sm leading-relaxed">{product.description}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+              <div>
+                <label className="block text-xs font-bold uppercase mb-1">Name</label>
+                <input 
+                  value={form.name} 
+                  onChange={e => setForm({...form, name: e.target.value})}
+                  className="w-full border border-black p-2 text-sm rounded-none focus:ring-1 focus:ring-black outline-none font-mono"
+                  placeholder="e.g. Blue Dream"
+                />
+              </div>
 
-          {filteredProducts.length === 0 && (
-            <div className="text-center py-16 border-4 border-black bg-white">
-              <p className="text-lg font-bold">&gt; ERROR: No Products Found</p>
-              <p className="text-sm text-gray-500 mt-2">// No items in this category</p>
-            </div>
-          )}
-        </div>
-      ) : (
-        /* Admin Panel */
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-xl sm:text-2xl font-bold">&gt; Manage Products Admin</h2>
-            <button
-              onClick={() => { setShowAdminModal(true); setFormData({ name: '', category: 'Flower', price: '', thc: '', cbd: '', description: '', image: '' })}}
-              className="bg-black text-white px-3 py-1 font-bold text-xs sm:text-sm hover:bg-gray-800 transition border-2 border-black flex items-center gap-1 flex-shrink-0"
-            >
-              <PlusIcon />
-              Add Item
-            </button>
-          </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase mb-1">Category</label>
+                  <select 
+                    value={form.category} 
+                    onChange={e => setForm({...form, category: e.target.value})}
+                    className="w-full border border-black p-2 text-sm rounded-none focus:ring-1 focus:ring-black outline-none bg-white"
+                  >
+                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase mb-1">Price</label>
+                  <input 
+                    value={form.price} 
+                    onChange={e => setForm({...form, price: e.target.value})}
+                    className="w-full border border-black p-2 text-sm rounded-none focus:ring-1 focus:ring-black outline-none"
+                    placeholder="$0.00"
+                  />
+                </div>
+              </div>
 
-          {/* Admin Product List */}
-          <div className="border-4 border-black bg-white">
-            {products.map((product, idx) => (
-              <div 
-                key={product.id} 
-                className={`p-3 sm:p-4 flex items-center gap-3 hover:bg-gray-50 ${idx !== products.length - 1 ? 'border-b-2 border-black' : ''}`}
-              >
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-cover border-2 border-black flex-shrink-0 grayscale"
-                />
-                <div className="flex-1 min-w-0 max-w-[50%] sm:max-w-none"> {/* FIXED: Restricted max width on mobile */}
-                  <h3 className="font-bold text-sm truncate">{product.name}</h3>
-                  <p className="text-xs text-gray-600 mt-1"> {/* FIXED: Smaller font size here */}
-                    {product.category} • {product.price}
-                  </p>
-                </div>
-                <div className="flex gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => handleEdit(product)}
-                    className="p-1 border-2 border-black hover:bg-black hover:text-white transition"
-                  >
-                    <Edit2Icon />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(product.id)}
-                    className="p-1 border-2 border-black hover:bg-red-500 hover:border-red-500 hover:text-white transition"
-                  >
-                    <Trash2Icon />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase mb-1">THC</label>
+                  <input 
+                    value={form.thc} 
+                    onChange={e => setForm({...form, thc: e.target.value})}
+                    className="w-full border border-black p-2 text-sm rounded-none focus:ring-1 focus:ring-black outline-none"
+                    placeholder="20%"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase mb-1">CBD</label>
+                  <input 
+                    value={form.cbd} 
+                    onChange={e => setForm({...form, cbd: e.target.value})}
+                    className="w-full border border-black p-2 text-sm rounded-none focus:ring-1 focus:ring-black outline-none"
+                    placeholder="0%"
+                  />
+                </div>
+              </div>
 
-      {/* Admin Modal */}
-      {showAdminModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-          <div className="bg-white border-4 border-black max-w-lg w-full max-h-[90dvh] overflow-y-auto shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
-            <div className="p-4 sm:p-6 border-b-4 border-black flex justify-between items-center sticky top-0 bg-white">
-              <h3 className="text-lg sm:text-xl font-bold">
-                &gt; {editingProduct ? 'Edit Product Configuration' : 'New Product Entry'}
-              </h3>
-              <button onClick={resetForm} className="hover:bg-gray-100 p-1 border border-transparent">
-                <XIcon />
-              </button>
-            </div>
-            <div className="p-4 sm:p-6 space-y-4">
-              {/* Image Input with Camera/Upload */}
-              <ImageInput value={formData.image} onChange={handleImageChange} />
-              
-              <div>
-                <label className="block text-xs font-bold mb-2">Product Name:</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border-2 border-black focus:outline-none focus:ring-2 focus:ring-black font-mono"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold mb-2">Category:</label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border-2 border-black focus:outline-none focus:ring-2 focus:ring-black font-mono"
-                >
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-bold mb-2">Price:</label>
-                  <input
-                    type="text"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleInputChange}
-                    placeholder="$45"
-                    className="w-full px-2 py-2 border-2 border-black focus:outline-none focus:ring-2 focus:ring-black font-mono text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold mb-2">THC %:</label>
-                  <input
-                    type="text"
-                    name="thc"
-                    value={formData.thc}
-                    onChange={handleInputChange}
-                    placeholder="24%"
-                    className="w-full px-2 py-2 border-2 border-black focus:outline-none focus:ring-2 focus:ring-black font-mono text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold mb-2">CBD %:</label>
-                  <input
-                    type="text"
-                    name="cbd"
-                    value={formData.cbd}
-                    onChange={handleInputChange}
-                    placeholder="<1%"
-                    className="w-full px-2 py-2 border-2 border-black focus:outline-none focus:ring-2 focus:ring-black font-mono text-sm"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold mb-2">Description Notes:</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={4}
-                  className="w-full px-4 py-2 border-2 border-black focus:outline-none focus:ring-2 focus:ring-black font-mono text-sm"
-                />
-              </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={handleSubmit}
-                  className="flex-1 bg-black text-white px-4 py-2 font-bold text-sm hover:bg-gray-800 transition flex items-center justify-center gap-2"
-                >
-                  <SaveIcon />
-                  {editingProduct ? 'Apply Update' : 'Save New'}
-                </button>
-                <button
-                  onClick={resetForm}
-                  className="px-4 py-2 border-2 border-black font-bold text-sm hover:bg-gray-100 transition"
-                >
-                  Cancel / Exit
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+              <div>
+                <label className="block text-xs font-bold uppercase mb-1">Description</label>
+                <textarea 
+                  rows="3"
+                  value={form.desc} 
+                  onChange={e => setForm({...form, desc: e.target.value})}
+                  className="w-full border border-black p-2 text-sm rounded-none focus:ring-1 focus:ring-black outline-none"
+                  placeholder="Item details..."
+                />
+              </div>
+
+              <button 
+                onClick={handleSave}
+                className="w-full bg-black text-white font-bold py-3 uppercase tracking-wider hover:bg-gray-800 active:bg-gray-900"
+              >
+                {editItem ? 'Save Changes' : 'Create Item'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
-ReactDOM.render(<DispensaryApp />, document.getElementById('root'));
+ReactDOM.render(<App />, document.getElementById('root'));
