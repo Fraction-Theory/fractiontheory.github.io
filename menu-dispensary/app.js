@@ -22,7 +22,7 @@ const Edit2Icon = () => (
 );
 
 const Trash2Icon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="3 6 5 6 21 6"></polyline>
     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
   </svg>
@@ -83,6 +83,17 @@ const storage = {
     }
   }
 };
+
+// --- BASE64 PLACEHOLDERS (UNIQUE FOR EACH ITEM) ---
+
+const placeholderImages = {
+  flower1: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIyNSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4gIDxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjI1IiBmaWxsPSIjRjBGMEYwIi8+ICA8dGV4dCB4PSIxNTAiIHk9IjExMi41IiBmb250LWZhbWlseT0iSmV0QnJhaW5zIE1vbm8sIG1vbm9zcGFjZSIgZm9udC1zaXplPSIxNnB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iIzAwMDAwMCI+e0ZMT1dFUiBQSENEU108L3RleHQ+PC9zdmc+",
+  edible1: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIyNSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4gIDxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjI1IiBmaWxsPSIjRjAwMDAwIi8+ICA8dGV4dCB4PSIxNTAiIHk9IjExMi41IiBmb250LWZhbWlseT0iSmV0QnJhaW5zIE1vbm8sIG1vbm9zcGFjZSIgZm9udC1zaXplPSIxNnB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iI0ZGRkZGRiI+e0VESUJMRVMgUEhDREVTfTwvdGV4dD48L3N2Zz4=",
+  concentrate1: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIyNSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4gIDxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjI1IiBmaWxsPSIjRkZGMjAwIi8+ICA8dGV4dCB4PSIxNTAiIHk9IjExMi41IiBmb250LWZhbWlseT0iSmV0QnJhaW5zIE1vbm8sIG1vbm9zcGFjZSIgZm9udC1zaXplPSIxNnB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iIzAwMDAwMCI+e0NPTkNFTlRSQVRFUyBQSENEU108L3RleHQ+PC9zdmc+=",
+  vape1: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIyNSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4gIDxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjI1IiBmaWxsPSIjQ0NDQ0NDIi8+ICA8dGV4dCB4PSIxNTAiIHk9IjExMi41IiBmb250LWZhbWlseT0iSmV0QnJhaW5zIE1vbm8sIG1vbm9zcGFjZSIgZm9udC1zaXplPSIxNnB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iIzAwMDAwMCI+e1ZBUkVfUEhDREVTfTwvdGV4dD48L3N2Zz4=",
+  topical1: "data:image:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIyNSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4gIDxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjI1IiBmaWxsPSIjMDBEMDBEIi8+ICA8dGV4dCB4PSIxNTAiIHk9IjExMi41IiBmb250LWZhbWlseT0iSmV0QnJhaW5zIE1vbm8sIG1vbm9zcGFjZSIgZm9udC1zaXplPSIxNnB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iI0ZGRkZGRiI+e1RPUElDQUxTIFBIQ0RFTFN9PC90ZXh0Pjwvc3ZnPg=="
+};
+
 
 // --- ADMIN IMAGE INPUT COMPONENT (PWA Camera/Local Upload) ---
 
@@ -166,16 +177,26 @@ const DispensaryApp = () => {
 
   const loadProducts = async () => {
     const result = await storage.get('dispensary-products');
-    // Using a slightly smaller placeholder image to reflect mobile focus
-    const placeholderImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIyNSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4gIDxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjI1IiBmaWxsPSIjRjBGMEYwIi8+ICA8dGV4dCB4PSIxNTAiIHk9IjExMi41IiBmb250LWZhbWlseT0iSmV0QnJhaW5zIE1vbm8sIG1vbm9zcGFjZSIgZm9udC1zaXplPSIxOHB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iIzAwMDAwMCI+e3Bob3RvX3ByZXNlbnR9PC90ZXh0Pjwvc3ZnPg==";
 
     if (result && result.value) {
       setProducts(JSON.parse(result.value));
     } else {
       const sampleProducts = [
-        { id: '1', name: 'Blue Dream', category: 'Flower', price: '$45', thc: '18-24%', cbd: '<1%', description: 'A balanced hybrid strain with sweet berry aroma and cerebral, full-body effects.', image: placeholderImage },
-        { id: '2', name: 'Sour Gummies', category: 'Edibles', price: '$25', thc: '10mg each', cbd: 'N/A', description: 'Delicious sour gummies, 10 pieces per pack. Perfect for controlled dosing.', image: placeholderImage },
-        { id: '3', name: 'Live Resin', category: 'Concentrates', price: '$60', thc: '75-85%', cbd: '<1%', description: 'Premium live resin extract with full terpene profile and potent effects.', image: placeholderImage }
+        { id: '1', name: 'Blue Dream', category: 'Flower', price: '$45', thc: '18-24%', cbd: '<1%', 
+          description: 'A balanced hybrid strain with sweet berry aroma and uplifting, cerebral effects. Perfect for daytime use and creative endeavors.', 
+          image: placeholderImages.flower1 },
+        { id: '2', name: 'Sour Gummies', category: 'Edibles', price: '$25', thc: '10mg each', cbd: 'N/A', 
+          description: 'High-dose sour raspberry gummies, 10 pieces per pack (100mg total). Accurate, consistent dosage for extended relief.', 
+          image: placeholderImages.edible1 },
+        { id: '3', name: 'Live Resin', category: 'Concentrates', price: '$60', thc: '75-85%', cbd: '<1%', 
+          description: 'Premium flash-frozen live resin extract with a full spectrum terpene profile. Highly potent and best used with a dab rig or vaporizer.', 
+          image: placeholderImages.concentrate1 },
+        { id: '4', name: 'Pineapple Express Vape', category: 'Vapes', price: '$50', thc: '90%', cbd: 'N/A', 
+          description: 'A one-gram distillate cartridge featuring the popular Pineapple Express flavor. Sativa-dominant effects are energizing and focused.', 
+          image: placeholderImages.vape1 },
+        { id: '5', name: 'Relief Balm', category: 'Topicals', price: '$35', thc: '200mg', cbd: '100mg', 
+          description: 'CBD/THC infused topical cream designed for localized pain relief and inflammation. Non-psychoactive.', 
+          image: placeholderImages.topical1 }
       ];
       saveProducts(sampleProducts);
       setProducts(sampleProducts);
@@ -247,7 +268,7 @@ const DispensaryApp = () => {
     <div className="min-h-dvh bg-white text-black font-mono">
       {/* Header */}
       <div className="bg-white text-black border-b-4 border-black sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4"> {/* Reduced vertical padding */}
+        <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
@@ -259,7 +280,7 @@ const DispensaryApp = () => {
             </div>
             <button
               onClick={() => setIsAdmin(!isAdmin)}
-              className="bg-black text-white px-3 py-1 font-bold text-xs sm:text-sm hover:bg-gray-800 transition border-2 border-black" // Smaller font/padding
+              className="bg-black text-white px-2 py-1 font-bold text-xs sm:text-sm hover:bg-gray-800 transition border-2 border-black flex-shrink-0" // Added flex-shrink-0
             >
               {isAdmin ? 'Menu' : 'Admin Mode'}
             </button>
@@ -274,7 +295,7 @@ const DispensaryApp = () => {
           <div className="mb-8 flex gap-2 overflow-x-auto pb-2 border-b-2 border-gray-200">
             <button
               onClick={() => setSelectedCategory('All')}
-              className={`px-3 py-1 font-semibold text-xs whitespace-nowrap transition border-2 border-black ${ // Smaller button size
+              className={`px-3 py-1 font-semibold text-xs whitespace-nowrap transition border-2 border-black ${
                 selectedCategory === 'All'
                   ? 'bg-black text-white'
                   : 'bg-white text-black hover:bg-gray-100'
@@ -286,7 +307,7 @@ const DispensaryApp = () => {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1 font-semibold text-xs whitespace-nowrap transition border-2 border-black ${ // Smaller button size
+                className={`px-3 py-1 font-semibold text-xs whitespace-nowrap transition border-2 border-black ${
                   selectedCategory === cat
                     ? 'bg-black text-white'
                     : 'bg-white text-black hover:bg-gray-100'
@@ -358,8 +379,8 @@ const DispensaryApp = () => {
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-xl sm:text-2xl font-bold">&gt; Manage Products Admin</h2>
             <button
-              onClick={() => { setShowAdminModal(true); setFormData({ name: '', category: 'Flower', price: '', thc: '', cbd: '', description: '', image: '' })}} // Ensure form is reset for new item
-              className="bg-black text-white px-3 py-1 font-bold text-xs sm:text-sm hover:bg-gray-800 transition border-2 border-black flex items-center gap-1" // Reduced gap and padding
+              onClick={() => { setShowAdminModal(true); setFormData({ name: '', category: 'Flower', price: '', thc: '', cbd: '', description: '', image: '' })}}
+              className="bg-black text-white px-3 py-1 font-bold text-xs sm:text-sm hover:bg-gray-800 transition border-2 border-black flex items-center gap-1 flex-shrink-0"
             >
               <PlusIcon />
               Add Item
@@ -378,22 +399,22 @@ const DispensaryApp = () => {
                   alt={product.name}
                   className="w-12 h-12 sm:w-16 sm:h-16 object-cover border-2 border-black flex-shrink-0 grayscale"
                 />
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 max-w-[50%] sm:max-w-none"> {/* FIXED: Restricted max width on mobile */}
                   <h3 className="font-bold text-sm truncate">{product.name}</h3>
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-gray-600 mt-1"> {/* FIXED: Smaller font size here */}
                     {product.category} • {product.price}
                   </p>
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
                   <button
                     onClick={() => handleEdit(product)}
-                    className="p-1 border-2 border-black hover:bg-black hover:text-white transition" // Smaller button padding
+                    className="p-1 border-2 border-black hover:bg-black hover:text-white transition"
                   >
                     <Edit2Icon />
                   </button>
                   <button
                     onClick={() => handleDelete(product.id)}
-                    className="p-1 border-2 border-black hover:bg-red-500 hover:border-red-500 hover:text-white transition" // Smaller button padding
+                    className="p-1 border-2 border-black hover:bg-red-500 hover:border-red-500 hover:text-white transition"
                   >
                     <Trash2Icon />
                   </button>
@@ -443,7 +464,7 @@ const DispensaryApp = () => {
                   ))}
                 </select>
               </div>
-              <div className="grid grid-cols-3 gap-4"> {/* Changed to 3 columns for better spacing */}
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-bold mb-2">Price:</label>
                   <input
@@ -491,14 +512,14 @@ const DispensaryApp = () => {
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={handleSubmit}
-                  className="flex-1 bg-black text-white px-4 py-2 font-bold text-sm hover:bg-gray-800 transition flex items-center justify-center gap-2" // Adjusted padding/font
+                  className="flex-1 bg-black text-white px-4 py-2 font-bold text-sm hover:bg-gray-800 transition flex items-center justify-center gap-2"
                 >
                   <SaveIcon />
                   {editingProduct ? 'Apply Update' : 'Save New'}
                 </button>
                 <button
                   onClick={resetForm}
-                  className="px-4 py-2 border-2 border-black font-bold text-sm hover:bg-gray-100 transition" // Adjusted padding/font
+                  className="px-4 py-2 border-2 border-black font-bold text-sm hover:bg-gray-100 transition"
                 >
                   Cancel / Exit
                 </button>
