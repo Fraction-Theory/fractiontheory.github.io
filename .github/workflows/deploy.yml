@@ -25,7 +25,7 @@ jobs:
       run: |
         # Use 'sed' to replace the placeholder with the actual secret value.
         # This modification happens *before* deployment and is temporary to the runner.
-        sed -i "s|___INJECT_GOOGLE_API_KEY___|${{ secrets.GOOGLE_API_KEY }}|g" app.js
+        sed -i "s|___INJECT_GOOGLE_API_KEY___|${{ secrets.GOOGLE_API_KEY }}|g" menu-dispensary/app.js
         
         echo "API Key successfully injected into app.js."
         echo "Example of injected key fragment: ${GOOGLE_API_KEY:0:5}..."
