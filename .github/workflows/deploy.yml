@@ -28,7 +28,7 @@ jobs:
         
         # 2. Use 'sed' with the safe variable to replace the key placeholder
         # We use ':' as the delimiter to avoid conflicts with common API key characters like '/' or '+'.
-        sed -i "s:___INJECT_GOOGLE_API_KEY___:${GOOGLE_API_KEY_SAFE}:g" app.js
+        sed -i "s:___INJECT_GOOGLE_API_KEY___:${GOOGLE_API_KEY_SAFE}:g" menu-dispensary/app.js
         
         # 3. Diagnostic Check (IMPORTANT: confirms the placeholder is gone)
         if grep -q "___INJECT_GOOGLE_API_KEY___" app.js; then
