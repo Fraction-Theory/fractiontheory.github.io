@@ -297,7 +297,7 @@ const App = () => {
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="min-w-0 flex-1 mr-4">
             {/* Title Case */}
-            <h1 className="font-bold text-xl truncate leading-none">Fraction Theory</h1>
+            <h1 className="font-bold text-xl truncate leading-none">fraction theory</h1>
             {/* Version Tagline */}
             <p className="text-[10px] text-gray-500 truncate leading-none mt-1">v2.1.0-cloud</p>
           </div>
