@@ -21,21 +21,29 @@ jobs:
       with:
         node-version: '18'
         
+    # 🔑 STEP 1: Inject Google API Key Secret and Client ID (ULTIMATE FIX)
     - name: Inject Google API Key Secret
       run: |
-        key="${{ secrets.GOOGLE_API_KEY }}"
-    
-        # Replace using node instead of sed (never fails)
-        node -e "
-          const fs = require('fs');
-          let f = fs.readFileSync('menu-dispensary/app.js', 'utf8');
-          f = f.replace(/___INJECT_GOOGLE_API_KEY___/g, '${key}');
-          fs.writeFileSync('menu-dispensary/app.js', f);
-        "
-    
-        # Verify
-        grep 'GOOGLE_API_KEY' menu-dispensary/app.js
-
+        # 1. Define the secret value securely using an environment variable
+        #    This is the safest way to ensure the secret is correctly escaped.
+        GOOGLE_API_KEY_SAFE="${{ secrets.GOOGLE_API_KEY }}"
+        
+        # 2. Use 'sed' with the environment variable substitution:
+        #    - 's:' uses the colon as the delimiter, making it safer than '/' or '|'.
+        #    - The actual key value is passed via the safe shell variable.
+        sed -i "s:___INJECT_GOOGLE_API_KEY___:${GOOGLE_API_KEY_SAFE}:g" menu-dispensary/app.js
+        
+        # 3. Diagnostic Check (Ensure the placeholder is gone)
+        if grep -q "___INJECT_GOOGLE_API_KEY___" menu-dispensary/app.js; then
+          echo "::error::API Key injection FAILED! The placeholder still exists in app.js."
+          echo "::error::Please check your GitHub Secret name (must be GOOGLE_API_KEY)."
+          exit 1
+        else
+          echo "✅ API Key successfully injected."
+        fi
+        
+        # 4. Final verification of the deployed file (Show 1 line of the modified file)
+        grep 'const GOOGLE_API_KEY' menu-dispensary/app.js
         
     # 🚀 STEP 2: Deploy to GitHub Pages
     - name: Deploy to GitHub Pages
