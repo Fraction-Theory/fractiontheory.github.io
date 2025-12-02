@@ -31,6 +31,8 @@ const PLACEHOLDERS = {
 // --- DRIVE SERVICE ---
 const DriveService = {
   tokenClient: null,
+  accessToken: null,
+  
   init: async (updateStatus) => {
     if (!window.gapi || !window.google) {
       console.warn("Google Scripts not loaded");
@@ -38,16 +40,14 @@ const DriveService = {
     }
     
     try {
+      // Load the API client
       await new Promise((resolve) => window.gapi.load('client', resolve));
-      await window.gapi.client.init({
-        apiKey: GOOGLE_API_KEY,
-        discoveryDocs: [DISCOVERY_DOC],
-        clientId: GOOGLE_CLIENT_ID,
-        scope: SCOPES
-      });
-      window.gapi.client.load('drive', 'v3');
+      
+      // Initialize without deprecated init method
+      await window.gapi.client.setApiKey(GOOGLE_API_KEY);
+      await window.gapi.client.load('drive', 'v3');
 
-
+      // Initialize token client with new GIS
       DriveService.tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: SCOPES,
@@ -68,11 +68,23 @@ const DriveService = {
       if (!DriveService.tokenClient) return reject("Token Client not init");
       
       DriveService.tokenClient.callback = async (resp) => {
-        if (resp.error) reject(resp);
+        if (resp.error) {
+          reject(resp);
+          return;
+        }
+        
+        // Store the access token
+        DriveService.accessToken = resp.access_token;
+        window.gapi.client.setToken({ access_token: resp.access_token });
         resolve(resp);
       };
       
-      DriveService.tokenClient.requestAccessToken({ prompt: 'consent' });
+      // Request access token - will prompt if needed
+      if (window.gapi.client.getToken() === null) {
+        DriveService.tokenClient.requestAccessToken({ prompt: 'consent' });
+      } else {
+        DriveService.tokenClient.requestAccessToken({ prompt: '' });
+      }
     });
   },
 
@@ -526,4 +538,4 @@ const App = () => {
   );
 };
 
-ReactDOM.render(<App />, document.getElementById('root'));
+export default App;
