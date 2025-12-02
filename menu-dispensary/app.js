@@ -1,8 +1,8 @@
 const { useState, useEffect, useRef } = React;
 
 // --- CONFIGURATION ---
-const GOOGLE_CLIENT_ID = '713729695172-4970qtjlc5l3pf4tua5lodq4r50oliji.apps.googleusercontent.com';
 const GOOGLE_API_KEY = '';
+const GOOGLE_CLIENT_ID = '713729695172-4970qtjlc5l3pf4tua5lodq4r50oliji.apps.googleusercontent.com';
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const FILE_NAME = 'fraction_theory_inventory.json';
@@ -98,40 +98,48 @@ const DriveService = {
   },
 
   saveData: async (data) => {
-    const fileContent = JSON.stringify(data);
-    const file = await DriveService.findFile();
-    
-    const fileMetadata = {
-      name: FILE_NAME,
-      mimeType: 'application/json',
-    };
+    try {
+      const fileContent = JSON.stringify(data);
+      const file = await DriveService.findFile();
+      
+      const fileMetadata = {
+        name: FILE_NAME,
+        mimeType: 'application/json',
+      };
 
-    const multipartRequestBody =
-      `\r\n--foo_bar_baz\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(fileMetadata)}\r\n--foo_bar_baz\r\nContent-Type: application/json\r\n\r\n${fileContent}\r\n--foo_bar_baz--`;
+      const multipartRequestBody =
+        `\r\n--foo_bar_baz\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(fileMetadata)}\r\n--foo_bar_baz\r\nContent-Type: application/json\r\n\r\n${fileContent}\r\n--foo_bar_baz--`;
 
-    const requestParams = {
-        path: file ? `/upload/drive/v3/files/${file.id}` : '/upload/drive/v3/files',
-        method: file ? 'PATCH' : 'POST',
-        params: { uploadType: 'multipart' },
-        headers: { 'Content-Type': 'multipart/related; boundary=foo_bar_baz' },
-        body: multipartRequestBody
-    };
+      // FIX: Use Absolute URL for Upload to avoid path resolution errors in GAPI
+      const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files';
+      
+      const requestParams = {
+          path: file ? `${uploadUrl}/${file.id}` : uploadUrl,
+          method: file ? 'PATCH' : 'POST',
+          params: { uploadType: 'multipart' },
+          headers: { 'Content-Type': 'multipart/related; boundary=foo_bar_baz' },
+          body: multipartRequestBody
+      };
 
-    await window.gapi.client.request(requestParams);
+      await window.gapi.client.request(requestParams);
+      console.log("Drive Sync Successful");
+    } catch (e) {
+      console.error("Drive Sync Error:", e);
+      throw e;
+    }
   },
 
   loadData: async () => {
     const file = await DriveService.findFile();
     if (!file) return null;
     
-    const res = await window.gapi.client.drive.files.get({
-      fileId: file.id,
-      alt: 'media'
-    });
-    
-    // FIX: Parse the body string, not the result object
     try {
-        return JSON.parse(res.body);
+      const res = await window.gapi.client.drive.files.get({
+        fileId: file.id,
+        alt: 'media'
+      });
+      // Handle GAPI response variations
+      return JSON.parse(res.body || res.result);
     } catch (e) {
         console.error("JSON Parse Error", e);
         return null;
@@ -198,7 +206,7 @@ const App = () => {
 
   const categories = ['Hash', 'Flower', 'Edibles','Rosin', ];
 
-  // --- SYNC FUNCTIONS (Hoisted for Preload) ---
+  // --- SYNC FUNCTIONS (Hoisted) ---
   const syncFromCloud = async () => {
     setSyncing(true);
     try {
@@ -215,7 +223,10 @@ const App = () => {
   };
 
   const syncToCloud = async (newData) => {
-    if (!user) return; // Only sync if logged in
+    // Note: If user refreshed page, 'user' state is false. 
+    // Data saves locally, but sync skips until re-login.
+    if (!user) return; 
+    
     setSyncing(true);
     try {
       await DriveService.saveData(newData);
@@ -229,13 +240,10 @@ const App = () => {
 
   // Init Google API
   useEffect(() => {
-    if(GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
-        console.warn("Google Client ID not set. Drive sync will not work.");
-    }
     DriveService.init(setGapiReady);
   }, []);
 
-  // Initial Load (JSON Preload Fix: Load Local, then Drive if gapi ready & token exists)
+  // Initial Load (JSON Preload Fix: Load Local, then Drive if session active)
   useEffect(() => {
     const loadData = async () => {
       // 1. Always load Local first for instant UI
@@ -253,9 +261,11 @@ const App = () => {
       }
       
       // 2. Preload from Cloud if session exists
+      // Note: GAPI token is not persisted in memory on refresh. 
+      // This mainly catches if the user is somehow already authenticated in the GAPI context.
       if (gapiReady && window.gapi.client.getToken() && window.gapi.client.getToken().access_token) {
         await syncFromCloud();
-        setUser(true); // Assume logged in if we are pulling data
+        setUser(true); 
       }
     };
 
@@ -263,7 +273,7 @@ const App = () => {
   }, [gapiReady]);
 
   const handleGoogleLogin = async () => {
-    if (!gapiReady) return alert('Google API not ready. Check keys or internet.');
+    if (!gapiReady) return alert('Google API not ready.');
     try {
       await DriveService.login();
       setUser(true);
@@ -287,7 +297,9 @@ const App = () => {
     localStorage.setItem('ft-products', JSON.stringify(newProducts));
      
     // Trigger Cloud Sync
-    if(user) await syncToCloud(newProducts);
+    if(user) {
+        await syncToCloud(newProducts);
+    }
      
     closeModal();
   };
@@ -317,14 +329,12 @@ const App = () => {
   return (
     <div className="min-h-screen bg-white text-black font-mono selection:bg-black selection:text-white">
       
-      {/* HEADER - Non Sticky (Relative) */}
+      {/* HEADER */}
       <header className="relative bg-white border-b-2 border-black">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="min-w-0 flex-1 mr-4">
-            {/* Title Case */}
             <h1 className="font-bold text-xl truncate leading-none">fraction theory</h1>
-            {/* Version Tagline */}
-            <p className="text-[10px] text-gray-500 truncate leading-none mt-1">v2.1.0-cloud</p>
+            <p className="text-[10px] text-gray-500 truncate leading-none mt-1">v2.1.1-cloud-fix</p>
           </div>
           <button 
             onClick={() => setView(view === 'menu' ? 'admin' : 'menu')}
