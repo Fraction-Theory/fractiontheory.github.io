@@ -1,3 +1,184 @@
+const { useState, useEffect, useRef } = React;
+
+// --- CONFIGURATION ---
+const GOOGLE_CLIENT_ID = '713729695172-4970qtjlc5l3pf4tua5lodq4r50oliji.apps.googleusercontent.com';
+const GOOGLE_API_KEY = '';
+const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const FILE_NAME = 'fraction_theory_inventory.json';
+
+// --- ICONS ---
+const Icons = {
+  X: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
+  Plus: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
+  Edit: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>,
+  Trash: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
+  ChevronDown: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>,
+  ChevronUp: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>,
+  Camera: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>,
+  Upload: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 7.5"></path><path d="M12 16v6"></path><path d="M15 19l-3 3-3-3"></path></svg>,
+  Google: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>,
+  Cloud: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+};
+
+// --- DATA PLACEHOLDERS ---
+const PLACEHOLDERS = {
+  flower: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmZmIi8+PHBhdGggZD0iTTE1MCA1MCBMIDE3MCA5MCBMIDIxMCAxMDAgTCAxODAgMTMwIEwgMTkwIDE3MCBMIDE1MCAxNTAgTCAxMTAgMTcwIEwgMTIwIDEzMCBMIDkwIDEwMCBMIDEzMCA5MCBaIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIvPjx0ZXh0IHg9IjE1MCIgeT0iMTkwIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5GTE9XRVI8L3RleHQ+PC9zdmc+",
+  edible: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iMTUwIiBjeT0iMTAwIiByPSI0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIiLz48dGV4dCB4PSIxNTAiIHk9IjE3MCIgZm9udC1mYW1pbHk9Im1vbm9zcGFjZSIgZm9udC1zaXplPSIxNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+RURJQkxFPC90ZXh0Pjwvc3ZnPg==",
+  extract: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmZmIi8+PHBhdGggZD0iTTE1MCA2MCBMIDE5MCAxMDAgTCAxNTAgMTQwIEwgMTEwIDEwMCBaIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIvPjx0ZXh0IHg9IjE1MCIgeT0iMTcwIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5FWFRSQUNUPC90ZXh0Pjwvc3ZnPg=="
+};
+
+// --- DRIVE SERVICE (FIXED) ---
+const DriveService = {
+  tokenClient: null,
+  
+  // Initialize GAPI and GIS separately
+  init: async (updateStatus) => {
+    if (!window.gapi || !window.google) {
+      console.warn("Google Scripts not loaded");
+      return false;
+    }
+    
+    try {
+      // 1. LOAD GAPI CLIENT
+      await new Promise((resolve) => window.gapi.load('client', resolve));
+      
+      // 2. INIT GAPI CLIENT (Discovery only, no Auth here, NO API KEY)
+      await window.gapi.client.init({
+        discoveryDocs: [DISCOVERY_DOC],
+      });
+
+      // 3. LOAD DRIVE API SPECIFICALLY
+      await window.gapi.client.load('drive', 'v3');
+
+      // 4. INIT GOOGLE IDENTITY SERVICES (GIS) - This handles the auth
+      DriveService.tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: SCOPES,
+        callback: '', // Callback defined at request time
+      });
+      
+      updateStatus(true);
+      return true;
+    } catch (err) {
+      console.error("GAPI Init Error:", err);
+      updateStatus(false);
+      return false;
+    }
+  },
+
+  // Login triggers the GIS Token Client
+  login: () => {
+    return new Promise((resolve, reject) => {
+      if (!DriveService.tokenClient) return reject("Token Client not init");
+      
+      DriveService.tokenClient.callback = async (resp) => {
+        if (resp.error) reject(resp);
+        // CRITICAL: Set the token for GAPI Client to use in future requests
+        if(window.gapi.client) window.gapi.client.setToken(resp);
+        resolve(resp);
+      };
+      
+      // Request access token (trigger popup)
+      DriveService.tokenClient.requestAccessToken({ prompt: 'consent' });
+    });
+  },
+
+  findFile: async () => {
+    try {
+        const res = await window.gapi.client.drive.files.list({
+            q: `name = '${FILE_NAME}' and trashed = false`,
+            fields: 'files(id, name)',
+        });
+        return res.result.files.length > 0 ? res.result.files[0] : null;
+    } catch (e) {
+        console.error("Error finding file:", e);
+        return null;
+    }
+  },
+
+  saveData: async (data) => {
+    const fileContent = JSON.stringify(data);
+    const file = await DriveService.findFile();
+    
+    const fileMetadata = {
+      name: FILE_NAME,
+      mimeType: 'application/json',
+    };
+
+    const multipartRequestBody =
+      `\r\n--foo_bar_baz\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(fileMetadata)}\r\n--foo_bar_baz\r\nContent-Type: application/json\r\n\r\n${fileContent}\r\n--foo_bar_baz--`;
+
+    const requestParams = {
+        path: file ? `/upload/drive/v3/files/${file.id}` : '/upload/drive/v3/files',
+        method: file ? 'PATCH' : 'POST',
+        params: { uploadType: 'multipart' },
+        headers: { 'Content-Type': 'multipart/related; boundary=foo_bar_baz' },
+        body: multipartRequestBody
+    };
+
+    await window.gapi.client.request(requestParams);
+  },
+
+  loadData: async () => {
+    const file = await DriveService.findFile();
+    if (!file) return null;
+    
+    const res = await window.gapi.client.drive.files.get({
+      fileId: file.id,
+      alt: 'media'
+    });
+    
+    // FIX: Parse the body string, not the result object
+    try {
+        return JSON.parse(res.body);
+    } catch (e) {
+        console.error("JSON Parse Error", e);
+        return null;
+    }
+  }
+};
+
+// --- COMPONENT: Image Input ---
+const ImageInput = ({ value, onChange }) => {
+  const trigger = (capture) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    if(capture) input.setAttribute('capture', capture);
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onloadend = () => onChange(reader.result);
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
+
+  return (
+    <div className="space-y-2">
+      <label className="block text-xs font-bold uppercase">Product Image</label>
+      <div className="grid grid-cols-2 gap-2">
+        <button onClick={() => trigger('user')} className="flex items-center justify-center gap-2 border border-black py-2 text-xs font-bold hover:bg-gray-100">
+          <Icons.Camera /> Snap
+        </button>
+        <button onClick={() => trigger(null)} className="flex items-center justify-center gap-2 border border-black py-2 text-xs font-bold hover:bg-gray-100">
+          <Icons.Upload /> Upload
+        </button>
+      </div>
+      {value && (
+        <div className="relative border border-black h-32 w-full mt-2 cursor-pointer group" onClick={() => onChange('')}>
+          <img src={value} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="text-white text-xs font-bold">REMOVE</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // --- APP COMPONENT ---
 const App = () => {
   const [view, setView] = useState('menu');
@@ -94,9 +275,6 @@ const App = () => {
     }
   };
   
-  // Removed the now redundant syncFromCloud function definition from here
-  // to move it above handleGoogleLogin for clarity and to allow initial save logic.
-
   const handleSave = async () => {
     if(!form.name || !form.price) return alert('Name and Price required');
     let newProducts;
@@ -217,7 +395,7 @@ const App = () => {
                         {p.desc || "No description available."}
                       </p>
                     )}
-                  </div>
+                </div>
                 </div>
               ))}
             </div>
