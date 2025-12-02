@@ -1,8 +1,8 @@
 const { useState, useEffect, useRef } = React;
 
 // --- CONFIGURATION (YOU MUST FILL THIS IN FOR GOOGLE DRIVE TO WORK) ---
-const GOOGLE_CLIENT_ID = '781276598623-m4j9dmdb977rgg2e8i4u82e1vkfk817d.apps.googleusercontent.com'; // e.g., 12345-abcde.apps.googleusercontent.com
-const GOOGLE_API_KEY = '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';
+const GOOGLE_CLIENT_ID = '713729695172-4970qtjlc5l3pf4tua5lodq4r50oliji.apps.googleusercontent.com'; // e.g., 12345-abcde.apps.googleusercontent.com
+const GOOGLE_API_KEY = 'AIzaSyBbi-aA914kryMo1pJB8kIG0FqxS7NxogE';
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const FILE_NAME = 'fraction_theory_inventory.json';
