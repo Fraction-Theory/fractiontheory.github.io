@@ -1,5 +1,25 @@
 const { useState, useEffect, useRef } = React;
 
+// --- CRITICAL UI FIX: Inject Tailwind CSS CDN ---
+// This ensures the utility classes (e.g., bg-black, border-black) are loaded and work.
+(() => {
+  if (document.getElementById('tailwind-cdn')) return;
+  const link = document.createElement('link');
+  link.id = 'tailwind-cdn';
+  link.rel = 'stylesheet';
+  link.href = 'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css';
+  document.head.appendChild(link);
+  // Additionally ensure font-mono is available for the aesthetic
+  const style = document.createElement('style');
+  style.innerHTML = `
+    body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  `;
+  document.head.appendChild(style);
+})();
+// --------------------------------------------------
+
 // --- CONFIGURATION ---
 const GOOGLE_CLIENT_ID = '713729695172-4970qtjlc5l3pf4tua5lodq4r50oliji.apps.googleusercontent.com';
 const GOOGLE_API_KEY = '';
