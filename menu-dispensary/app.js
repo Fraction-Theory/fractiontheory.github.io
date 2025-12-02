@@ -196,7 +196,7 @@ const App = () => {
   // Form State
   const [form, setForm] = useState({ name: '', category: 'Flower', price: '', thc: '', cbd: '', desc: '', image: '' });
 
-  const categories = ['Flower', 'Edibles', 'Concentrates', 'Topicals'];
+  const categories = ['Hash', 'Flower', 'Edibles','Rosin', ];
 
   // Init Google API
   useEffect(() => {
