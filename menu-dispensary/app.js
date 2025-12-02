@@ -18,7 +18,8 @@ const Icons = {
   Camera: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>,
   Upload: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 7.5"></path><path d="M12 16v6"></path><path d="M15 19l-3 3-3-3"></path></svg>,
   Google: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>,
-  Cloud: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+  Cloud: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>,
+  Refresh: () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
 };
 
 // --- DATA PLACEHOLDERS ---
@@ -31,8 +32,7 @@ const PLACEHOLDERS = {
 // --- DRIVE SERVICE ---
 const DriveService = {
   tokenClient: null,
-   
-  // Initialize GAPI and GIS separately
+    
   init: async (updateStatus) => {
     if (!window.gapi || !window.google) {
       console.warn("Google Scripts not loaded");
@@ -40,22 +40,13 @@ const DriveService = {
     }
     
     try {
-      // 1. LOAD GAPI CLIENT
       await new Promise((resolve) => window.gapi.load('client', resolve));
-      
-      // 2. INIT GAPI CLIENT (Discovery only, no Auth here, NO API KEY)
-      await window.gapi.client.init({
-        discoveryDocs: [DISCOVERY_DOC],
-      });
-
-      // 3. LOAD DRIVE API SPECIFICALLY
+      await window.gapi.client.init({ discoveryDocs: [DISCOVERY_DOC] });
       await window.gapi.client.load('drive', 'v3');
-
-      // 4. INIT GOOGLE IDENTITY SERVICES (GIS) - This handles the auth
       DriveService.tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: SCOPES,
-        callback: '', // Callback defined at request time
+        callback: '', 
       });
       
       updateStatus(true);
@@ -67,19 +58,16 @@ const DriveService = {
     }
   },
 
-  // Login triggers the GIS Token Client
   login: () => {
     return new Promise((resolve, reject) => {
       if (!DriveService.tokenClient) return reject("Token Client not init");
       
       DriveService.tokenClient.callback = async (resp) => {
         if (resp.error) reject(resp);
-        // CRITICAL: Set the token for GAPI Client to use in future requests
         if(window.gapi.client) window.gapi.client.setToken(resp);
         resolve(resp);
       };
       
-      // Request access token (trigger popup)
       DriveService.tokenClient.requestAccessToken({ prompt: 'consent' });
     });
   },
@@ -110,7 +98,6 @@ const DriveService = {
       const multipartRequestBody =
         `\r\n--foo_bar_baz\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(fileMetadata)}\r\n--foo_bar_baz\r\nContent-Type: application/json\r\n\r\n${fileContent}\r\n--foo_bar_baz--`;
 
-      // FIX: Use Absolute URL for Upload to avoid path resolution errors in GAPI
       const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files';
       
       const requestParams = {
@@ -138,7 +125,6 @@ const DriveService = {
         fileId: file.id,
         alt: 'media'
       });
-      // Handle GAPI response variations
       return JSON.parse(res.body || res.result);
     } catch (e) {
         console.error("JSON Parse Error", e);
@@ -154,14 +140,26 @@ const ImageInput = ({ value, onChange }) => {
     input.type = 'file';
     input.accept = 'image/*';
     if(capture) input.setAttribute('capture', capture);
+    
+    // FIX: Append to body temporarily for PWA/Mobile Gallery access
+    input.style.display = 'none';
+    document.body.appendChild(input);
+
     input.onchange = (e) => {
       const file = e.target.files[0];
       if(!file) return;
       const reader = new FileReader();
       reader.onloadend = () => onChange(reader.result);
       reader.readAsDataURL(file);
+      document.body.removeChild(input); // Cleanup
     };
+    
     input.click();
+    
+    // Safety cleanup if user cancels
+    setTimeout(() => {
+        if(document.body.contains(input)) document.body.removeChild(input);
+    }, 60000);
   };
 
   return (
@@ -195,7 +193,7 @@ const App = () => {
   const [expanded, setExpanded] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
-   
+    
   // Google Auth State
   const [gapiReady, setGapiReady] = useState(false);
   const [user, setUser] = useState(false);
@@ -206,7 +204,7 @@ const App = () => {
 
   const categories = ['Hash', 'Flower', 'Edibles','Rosin', ];
 
-  // --- SYNC FUNCTIONS (Hoisted) ---
+  // --- SYNC FUNCTIONS ---
   const syncFromCloud = async () => {
     setSyncing(true);
     try {
@@ -223,8 +221,6 @@ const App = () => {
   };
 
   const syncToCloud = async (newData) => {
-    // Note: If user refreshed page, 'user' state is false. 
-    // Data saves locally, but sync skips until re-login.
     if (!user) return; 
     
     setSyncing(true);
@@ -243,26 +239,22 @@ const App = () => {
     DriveService.init(setGapiReady);
   }, []);
 
-  // Initial Load (JSON Preload Fix: Load Local, then Drive if session active)
+  // Initial Load
   useEffect(() => {
     const loadData = async () => {
-      // 1. Always load Local first for instant UI
       const local = localStorage.getItem('ft-products');
       if (local) {
         setProducts(JSON.parse(local));
       } else {
         const defaults = [
-          { id: '1', name: 'Blue Dream', category: 'Flower', price: '$45', thc: '22%', cbd: '<1%', desc: 'Classic sativa-dominant hybrid. Sweet berry aroma with full-body relaxation.', image: PLACEHOLDERS.flower },
-          { id: '2', name: 'Magic Gummies', category: 'Edibles', price: '$20', thc: '100mg', cbd: '0mg', desc: 'Pack of 10 watermelon gummies. 10mg THC per piece.', image: PLACEHOLDERS.edible },
-          { id: '3', name: 'Live Rosin', category: 'Concentrates', price: '$70', thc: '85%', cbd: '2%', desc: 'Solventless extract. Pure flavor and high potency.', image: PLACEHOLDERS.extract }
+          { id: '1', name: 'Blue Dream', category: 'Flower', price: '$45', thc: '22%', cbd: '<1%', desc: 'Classic sativa-dominant hybrid.', image: PLACEHOLDERS.flower },
+          { id: '2', name: 'Magic Gummies', category: 'Edibles', price: '$20', thc: '100mg', cbd: '0mg', desc: 'Watermelon gummies.', image: PLACEHOLDERS.edible },
+          { id: '3', name: 'Live Rosin', category: 'Concentrates', price: '$70', thc: '85%', cbd: '2%', desc: 'Solventless extract.', image: PLACEHOLDERS.extract }
         ];
         setProducts(defaults);
         localStorage.setItem('ft-products', JSON.stringify(defaults));
       }
       
-      // 2. Preload from Cloud if session exists
-      // Note: GAPI token is not persisted in memory on refresh. 
-      // This mainly catches if the user is somehow already authenticated in the GAPI context.
       if (gapiReady && window.gapi.client.getToken() && window.gapi.client.getToken().access_token) {
         await syncFromCloud();
         setUser(true); 
@@ -292,15 +284,14 @@ const App = () => {
     } else {
       newProducts = [...products, { ...form, id: Date.now().toString() }];
     }
-     
+      
     setProducts(newProducts);
     localStorage.setItem('ft-products', JSON.stringify(newProducts));
-     
-    // Trigger Cloud Sync
+      
     if(user) {
         await syncToCloud(newProducts);
     }
-     
+      
     closeModal();
   };
 
@@ -334,7 +325,7 @@ const App = () => {
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="min-w-0 flex-1 mr-4">
             <h1 className="font-bold text-xl truncate leading-none">fraction theory</h1>
-            <p className="text-[10px] text-gray-500 truncate leading-none mt-1">v2.1.1-cloud-fix</p>
+            <p className="text-[10px] text-gray-500 truncate leading-none mt-1">v2.1.2-pwa-fix</p>
           </div>
           <button 
             onClick={() => setView(view === 'menu' ? 'admin' : 'menu')}
@@ -385,7 +376,7 @@ const App = () => {
                       {p.price}
                     </div>
                   </div>
-                   
+                    
                   <div className="p-3">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-bold text-sm leading-tight">{p.name}</h3>
@@ -425,8 +416,17 @@ const App = () => {
                         Login with Google
                     </button>
                 ) : (
-                    <div className="flex items-center gap-2">
-                        {syncing && <span className="text-[10px] animate-pulse">Syncing...</span>}
+                    <div className="flex items-center gap-3">
+                        {syncing ? <span className="text-[10px] animate-pulse">Syncing...</span> : null}
+                        {/* NEW FORCE SYNC BUTTON */}
+                        <button 
+                          onClick={() => syncToCloud(products)}
+                          disabled={syncing}
+                          className="flex items-center gap-1 bg-white border border-black hover:bg-black hover:text-white px-2 py-1 transition-colors disabled:opacity-50"
+                          title="Force Save to Drive"
+                        >
+                           <Icons.Refresh /> <span className="text-[10px] font-bold">SYNC</span>
+                        </button>
                         <Icons.Cloud />
                     </div>
                 )}
@@ -445,7 +445,7 @@ const App = () => {
                   <div className="w-10 h-10 shrink-0 bg-gray-100 border border-gray-200 overflow-hidden">
                     {p.image && <img src={p.image} className="w-full h-full object-cover" />}
                   </div>
-                   
+                    
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-xs truncate">{p.name}</div>
                     <div className="text-[10px] text-gray-500 truncate">{p.category} • {p.price}</div>
@@ -470,7 +470,7 @@ const App = () => {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={closeModal} />
-           
+            
           <div className="relative bg-white w-full max-w-lg border-t-2 sm:border-2 border-black p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-bold text-lg uppercase">{editItem ? 'Edit Item' : 'New Item'}</h3>
