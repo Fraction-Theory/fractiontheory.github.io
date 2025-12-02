@@ -2,6 +2,7 @@ const { useState, useEffect, useRef } = React;
 
 // --- CONFIGURATION ---
 const GOOGLE_CLIENT_ID = '713729695172-4970qtjlc5l3pf4tua5lodq4r50oliji.apps.googleusercontent.com';
+const GOOGLE_API_KEY = '';
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const FILE_NAME = 'fraction_theory_inventory.json';
