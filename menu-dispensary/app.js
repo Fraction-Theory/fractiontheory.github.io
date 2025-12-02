@@ -1,8 +1,7 @@
 const { useState, useEffect, useRef } = React;
 
-// --- CONFIGURATION (YOU MUST FILL THIS IN FOR GOOGLE DRIVE TO WORK) ---
-const GOOGLE_CLIENT_ID = '713729695172-4970qtjlc5l3pf4tua5lodq4r50oliji.apps.googleusercontent.com'; // e.g., 12345-abcde.apps.googleusercontent.com
-const GOOGLE_API_KEY = '___INJECT_GOOGLE_API_KEY___';
+// --- CONFIGURATION ---
+const GOOGLE_CLIENT_ID = '713729695172-4970qtjlc5l3pf4tua5lodq4r50oliji.apps.googleusercontent.com';
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const FILE_NAME = 'fraction_theory_inventory.json';
@@ -28,11 +27,11 @@ const PLACEHOLDERS = {
   extract: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmZmIi8+PHBhdGggZD0iTTE1MCA2MCBMIDE5MCAxMDAgTCAxNTAgMTQwIEwgMTEwIDEwMCBaIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIvPjx0ZXh0IHg9IjE1MCIgeT0iMTcwIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5FWFRSQUNUPC90ZXh0Pjwvc3ZnPg=="
 };
 
-// --- DRIVE SERVICE ---
+// --- DRIVE SERVICE (FIXED) ---
 const DriveService = {
   tokenClient: null,
-  accessToken: null,
   
+  // Initialize GAPI and GIS separately
   init: async (updateStatus) => {
     if (!window.gapi || !window.google) {
       console.warn("Google Scripts not loaded");
@@ -40,18 +39,22 @@ const DriveService = {
     }
     
     try {
-      // Load the API client
+      // 1. LOAD GAPI CLIENT
       await new Promise((resolve) => window.gapi.load('client', resolve));
       
-      // Initialize without deprecated init method
-      await window.gapi.client.setApiKey(GOOGLE_API_KEY);
+      // 2. INIT GAPI CLIENT (Discovery only, no Auth here, NO API KEY)
+      await window.gapi.client.init({
+        discoveryDocs: [DISCOVERY_DOC],
+      });
+
+      // 3. LOAD DRIVE API SPECIFICALLY
       await window.gapi.client.load('drive', 'v3');
 
-      // Initialize token client with new GIS
+      // 4. INIT GOOGLE IDENTITY SERVICES (GIS) - This handles the auth
       DriveService.tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: SCOPES,
-        callback: '', // defined at request time
+        callback: '', // Callback defined at request time
       });
       
       updateStatus(true);
@@ -63,37 +66,34 @@ const DriveService = {
     }
   },
 
+  // Login triggers the GIS Token Client
   login: () => {
     return new Promise((resolve, reject) => {
       if (!DriveService.tokenClient) return reject("Token Client not init");
       
       DriveService.tokenClient.callback = async (resp) => {
-        if (resp.error) {
-          reject(resp);
-          return;
-        }
-        
-        // Store the access token
-        DriveService.accessToken = resp.access_token;
-        window.gapi.client.setToken({ access_token: resp.access_token });
+        if (resp.error) reject(resp);
+        // CRITICAL: Set the token for GAPI Client to use in future requests
+        if(window.gapi.client) window.gapi.client.setToken(resp);
         resolve(resp);
       };
       
-      // Request access token - will prompt if needed
-      if (window.gapi.client.getToken() === null) {
-        DriveService.tokenClient.requestAccessToken({ prompt: 'consent' });
-      } else {
-        DriveService.tokenClient.requestAccessToken({ prompt: '' });
-      }
+      // Request access token (trigger popup)
+      DriveService.tokenClient.requestAccessToken({ prompt: 'consent' });
     });
   },
 
   findFile: async () => {
-    const res = await window.gapi.client.drive.files.list({
-      q: `name = '${FILE_NAME}' and trashed = false`,
-      fields: 'files(id, name)',
-    });
-    return res.result.files.length > 0 ? res.result.files[0] : null;
+    try {
+        const res = await window.gapi.client.drive.files.list({
+            q: `name = '${FILE_NAME}' and trashed = false`,
+            fields: 'files(id, name)',
+        });
+        return res.result.files.length > 0 ? res.result.files[0] : null;
+    } catch (e) {
+        console.error("Error finding file:", e);
+        return null;
+    }
   },
 
   saveData: async (data) => {
@@ -108,25 +108,15 @@ const DriveService = {
     const multipartRequestBody =
       `\r\n--foo_bar_baz\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(fileMetadata)}\r\n--foo_bar_baz\r\nContent-Type: application/json\r\n\r\n${fileContent}\r\n--foo_bar_baz--`;
 
-    if (file) {
-      // Update existing
-      await window.gapi.client.request({
-        path: `/upload/drive/v3/files/${file.id}`,
-        method: 'PATCH',
+    const requestParams = {
+        path: file ? `/upload/drive/v3/files/${file.id}` : '/upload/drive/v3/files',
+        method: file ? 'PATCH' : 'POST',
         params: { uploadType: 'multipart' },
         headers: { 'Content-Type': 'multipart/related; boundary=foo_bar_baz' },
         body: multipartRequestBody
-      });
-    } else {
-      // Create new
-      await window.gapi.client.request({
-        path: '/upload/drive/v3/files',
-        method: 'POST',
-        params: { uploadType: 'multipart' },
-        headers: { 'Content-Type': 'multipart/related; boundary=foo_bar_baz' },
-        body: multipartRequestBody
-      });
-    }
+    };
+
+    await window.gapi.client.request(requestParams);
   },
 
   loadData: async () => {
@@ -137,7 +127,14 @@ const DriveService = {
       fileId: file.id,
       alt: 'media'
     });
-    return res.result;
+    
+    // FIX: Parse the body string, not the result object
+    try {
+        return JSON.parse(res.body);
+    } catch (e) {
+        console.error("JSON Parse Error", e);
+        return null;
+    }
   }
 };
 
@@ -225,7 +222,7 @@ const App = () => {
   }, []);
 
   const handleGoogleLogin = async () => {
-    if (!gapiReady) return alert('Google API not ready. Check keys.');
+    if (!gapiReady) return alert('Google API not ready. Check keys or internet.');
     try {
       await DriveService.login();
       setUser(true);
@@ -538,4 +535,4 @@ const App = () => {
   );
 };
 
-export default App;
+ReactDOM.render(<App />, document.getElementById('root'));
