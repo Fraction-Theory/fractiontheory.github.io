@@ -31,7 +31,6 @@ const PLACEHOLDERS = {
 // --- DRIVE SERVICE ---
 const DriveService = {
   tokenClient: null,
-  
   init: async (updateStatus) => {
     if (!window.gapi || !window.google) {
       console.warn("Google Scripts not loaded");
@@ -43,7 +42,11 @@ const DriveService = {
       await window.gapi.client.init({
         apiKey: GOOGLE_API_KEY,
         discoveryDocs: [DISCOVERY_DOC],
+        clientId: GOOGLE_CLIENT_ID,
+        scope: SCOPES
       });
+      window.gapi.client.load('drive', 'v3');
+
 
       DriveService.tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
