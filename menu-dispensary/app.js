@@ -259,7 +259,7 @@ const DriveService = {
       ErrorLogger.log('DRIVE_LOAD_DATA', e);
       return null;
     }
-}
+};
 
 // --- COMPONENT: Image Input ---
 const ImageInput = ({ value, onChange }) => {
