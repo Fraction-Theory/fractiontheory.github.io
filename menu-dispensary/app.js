@@ -262,56 +262,115 @@ const DriveService = {
   },
 };
 
+// --- ADJUSTED IMAGE COMPRESSION UTILITY ---
+const ImageCompressor = (file, maxWidth = 720, quality = 0.7) => {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) {
+      return reject(new Error('File is not an image.'));
+    }
+    // Skip compression if image is very small (<50kb)
+    if (file.size < 50000) { 
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // 1. Resizing logic: Scale down to max 720px width (2x 358px)
+        if (width > maxWidth) {
+          height = height * (maxWidth / width);
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // 2. Compression logic: Export as JPEG with specified quality
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedDataUrl);
+      };
+      img.onerror = reject;
+      img.src = event.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
 // --- COMPONENT: Image Input ---
+// --- COMPONENT: Image Input (UPDATED) ---
 const ImageInput = ({ value, onChange }) => {
-  const trigger = (capture) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    if(capture) input.setAttribute('capture', capture);
-    
-    // FIX: Append to body temporarily for PWA/Mobile Gallery access
-    input.style.display = 'none';
-    document.body.appendChild(input);
+  const trigger = (capture) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    if(capture) input.setAttribute('capture', capture);
+    
+    // Append to body temporarily for PWA/Mobile Gallery access
+    input.style.display = 'none';
+    document.body.appendChild(input);
 
-    input.onchange = (e) => {
-      const file = e.target.files[0];
-      if(!file) return;
-      const reader = new FileReader();
-      reader.onloadend = () => onChange(reader.result);
-      reader.readAsDataURL(file);
-      document.body.removeChild(input); // Cleanup
-    };
-    
-    input.click();
-    
-    // Safety cleanup if user cancels
-    setTimeout(() => {
-        if(document.body.contains(input)) document.body.removeChild(input);
-    }, 60000);
-  };
+    input.onchange = async (e) => { // CHANGED to async handler
+      const file = e.target.files[0];
+        
+      if(!file) {
+           document.body.removeChild(input);
+           return;
+      }
+      
+      try {
+        // CALL THE COMPRESSOR HERE. It uses the new default max width of 720px.
+        const compressedDataUrl = await ImageCompressor(file); 
+        onChange(compressedDataUrl);
+      } catch (error) {
+        console.error("Image compression failed:", error);
+        alert("Image processing failed. Check console for details.");
+        // Clear image input on compression failure to prevent saving corrupt data
+        onChange(''); 
+      }
+      
+      document.body.removeChild(input); // Cleanup the temporary input element
+    };
+    
+    input.click();
+    
+    // Safety cleanup if user cancels the file dialog
+    setTimeout(() => {
+        if(document.body.contains(input)) document.body.removeChild(input);
+    }, 60000);
+  };
 
-  return (
-    <div className="space-y-2">
-      <label className="block text-xs font-bold uppercase">Product Image</label>
-      <div className="grid grid-cols-2 gap-2">
-        <button onClick={() => trigger('user')} className="flex items-center justify-center gap-2 border border-black py-2 text-xs font-bold hover:bg-gray-100">
-          <Icons.Camera /> Snap
-        </button>
-        <button onClick={() => trigger(null)} className="flex items-center justify-center gap-2 border border-black py-2 text-xs font-bold hover:bg-gray-100">
-          <Icons.Upload /> Upload
-        </button>
-      </div>
-      {value && (
-        <div className="relative border border-black h-32 w-full mt-2 cursor-pointer group" onClick={() => onChange('')}>
-          <img src={value} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <span className="text-white text-xs font-bold">REMOVE</span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return (
+    <div className="space-y-2">
+      <label className="block text-xs font-bold uppercase">Product Image</label>
+      <div className="grid grid-cols-2 gap-2">
+        <button onClick={() => trigger('user')} className="flex items-center justify-center gap-2 border border-black py-2 text-xs font-bold hover:bg-gray-100">
+          <Icons.Camera /> Snap
+        </button>
+        <button onClick={() => trigger(null)} className="flex items-center justify-center gap-2 border border-black py-2 text-xs font-bold hover:bg-gray-100">
+          <Icons.Upload /> Upload
+        </button>
+      </div>
+      {value && (
+        <div className="relative border border-black h-32 w-full mt-2 cursor-pointer group" onClick={() => onChange('')}>
+          <img src={value} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="text-white text-xs font-bold">REMOVE</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 // --- APP COMPONENT ---
@@ -478,7 +537,7 @@ const App = () => {
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="min-w-0 flex-1 mr-4">
             <h1 className="font-bold text-xl truncate leading-none">fraction theory</h1>
-            <p className="text-[10px] text-gray-500 truncate leading-none mt-1">v2.2.0-indexeddb</p>
+            <p className="text-[10px] text-gray-500 truncate leading-none mt-1">v2.2.1-compressor</p>
           </div>
           <button 
             onClick={() => setView(view === 'menu' ? 'admin' : 'menu')}
