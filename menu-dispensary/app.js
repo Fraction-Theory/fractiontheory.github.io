@@ -166,21 +166,46 @@ const DriveService = {
   },
 
   loadData: async () => {
-    const file = await DriveService.findFile();
-    if (!file) return null;
-    
     try {
+      console.log('Finding file in Drive...');
+      const file = await DriveService.findFile();
+      
+      if (!file) {
+        console.log('No file found in Drive');
+        alert('No file found in Drive');
+        return null;
+      }
+      
+      console.log('File found:', file.name, file.id);
+      alert(`File found: ${file.name}`);
+      
+      console.log('Downloading file content...');
       const res = await window.gapi.client.drive.files.get({
         fileId: file.id,
         alt: 'media'
       });
-      return JSON.parse(res.body || res.result);
+      
+      console.log('Raw response:', res);
+      alert(`Response received. Body length: ${res.body?.length || 'no body'}`);
+      
+      const dataString = res.body || res.result;
+      console.log('Data string length:', dataString?.length);
+      
+      console.log('Parsing JSON...');
+      alert('Parsing JSON...');
+      const parsed = JSON.parse(dataString);
+      
+      console.log('Parse successful. Items:', parsed?.length);
+      alert(`Parse successful. ${parsed?.length} items loaded`);
+      
+      return parsed;
     } catch (e) {
-        console.error("JSON Parse Error", e);
-        return null;
+      console.error("Drive loadData error:", e);
+      alert(`❌ Drive load error:\n${e.message}\n\nAt: ${e.stack?.split('\n')[1] || 'unknown'}`);
+      ErrorLogger.log('DRIVE_LOAD_DATA', e);
+      return null;
     }
-  }
-};
+}
 
 // --- COMPONENT: Image Input ---
 const ImageInput = ({ value, onChange }) => {
