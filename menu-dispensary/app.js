@@ -39,14 +39,14 @@ window.addEventListener('error', (event) => {
     lineno: event.lineno,
     colno: event.colno
   });
-  alert(`GLOBAL ERROR: ${event.error?.message || event.message}`);
+  console.log(`GLOBAL ERROR: ${event.error?.message || event.message}`);
 });
 
 window.addEventListener('unhandledrejection', (event) => {
   ErrorLogger.log('UNHANDLED_PROMISE', event.reason, {
     promise: event.promise
   });
-  alert(`UNHANDLED PROMISE: ${event.reason?.message || event.reason}`);
+  console.log(`UNHANDLED PROMISE: ${event.reason?.message || event.reason}`);
 });
 
 console.log('Error tracking initialized');
@@ -231,7 +231,7 @@ const DriveService = {
       }
       
       console.log('File found:', file.name, file.id);
-      alert(`File found: ${file.name}`);
+      console.log(`File found: ${file.name}`);
       
       console.log('Downloading file content...');
       const res = await window.gapi.client.drive.files.get({
@@ -240,17 +240,17 @@ const DriveService = {
       });
       
       console.log('Raw response:', res);
-      alert(`Response received. Body length: ${res.body?.length || 'no body'}`);
+      console.log(`Response received. Body length: ${res.body?.length || 'no body'}`);
       
       const dataString = res.body || res.result;
       console.log('Data string length:', dataString?.length);
       
       console.log('Parsing JSON...');
-      alert('Parsing JSON...');
+      console.log('Parsing JSON...');
       const parsed = JSON.parse(dataString);
       
       console.log('Parse successful. Items:', parsed?.length);
-      alert(`Parse successful. ${parsed?.length} items loaded`);
+      console.log(`Parse successful. ${parsed?.length} items loaded`);
       
       return parsed;
     } catch (e) {
@@ -397,28 +397,27 @@ const App = () => {
     setSyncing(true);
     try {
       console.log('Starting cloud download...');
-      alert('Starting Google Drive download...');
+      console.log('Starting Google Drive download...');
       
       const cloudData = await DriveService.loadData();
       
       console.log('Download received:', cloudData);
-      alert(`Download received: ${cloudData?.length || 0} items`);
+      console.log(`Download received: ${cloudData?.length || 0} items`);
       
       if (cloudData) {
         console.log('[SYNC_FROM_CLOUD] Download Complete', cloudData);
         
         console.log('Setting products in state...');
-        alert('Setting products in state...');
+        console.log('Setting products in state...');
         setProducts(cloudData);
         
         console.log('Saving to IndexedDB...');
-        alert('Saving to IndexedDB...');
         await IndexedDBService.save('ft-products', cloudData);
         
         console.log('Save complete!');
-        alert('✅ Sync complete successfully!');
+        console.log('✅ Sync complete successfully!');
       } else {
-        alert('No data received from Drive');
+        alert('❌ No data received from Drive');
       }
     } catch (e) {
       console.error("Cloud Load Error", e);
@@ -537,7 +536,7 @@ const App = () => {
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="min-w-0 flex-1 mr-4">
             <h1 className="font-bold text-xl truncate leading-none">fraction theory</h1>
-            <p className="text-[10px] text-gray-500 truncate leading-none mt-1">v2.2.1-compressor</p>
+            <p className="text-[10px] text-gray-500 truncate leading-none mt-1">v2.3.0-silentcompressor</p>
           </div>
           <button 
             onClick={() => setView(view === 'menu' ? 'admin' : 'menu')}
