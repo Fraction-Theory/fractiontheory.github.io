@@ -1,3 +1,57 @@
+const ErrorLogger = {
+  errors: [],
+  
+  log: (context, error, extra = {}) => {
+    const errorInfo = {
+      timestamp: new Date().toISOString(),
+      context,
+      message: error?.message || String(error),
+      stack: error?.stack,
+      userAgent: navigator.userAgent,
+      ...extra
+    };
+    
+    ErrorLogger.errors.push(errorInfo);
+    console.error(`[${context}]`, error, extra);
+    
+    // Store in sessionStorage for inspection
+    try {
+      sessionStorage.setItem('app-errors', JSON.stringify(ErrorLogger.errors));
+    } catch (e) {
+      console.warn('Could not store errors', e);
+    }
+  },
+  
+  getErrors: () => ErrorLogger.errors,
+  
+  displayErrors: () => {
+    if (ErrorLogger.errors.length === 0) return 'No errors logged';
+    return ErrorLogger.errors.map(e => 
+      `[${e.timestamp}] ${e.context}: ${e.message}`
+    ).join('\n');
+  }
+};
+
+// Global error handlers
+window.addEventListener('error', (event) => {
+  ErrorLogger.log('GLOBAL_ERROR', event.error, {
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno
+  });
+  alert(`GLOBAL ERROR: ${event.error?.message || event.message}`);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  ErrorLogger.log('UNHANDLED_PROMISE', event.reason, {
+    promise: event.promise
+  });
+  alert(`UNHANDLED PROMISE: ${event.reason?.message || event.reason}`);
+});
+
+console.log('Error tracking initialized');
+window.ErrorLogger = ErrorLogger; // Make globally accessible
+
 const { useState, useEffect, useRef } = React;
 
 // --- CONFIGURATION ---
