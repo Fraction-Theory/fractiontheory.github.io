@@ -257,15 +257,37 @@ const App = () => {
   const syncFromCloud = async () => {
     setSyncing(true);
     try {
+      console.log('Starting cloud download...');
+      alert('Starting Google Drive download...');
+      
       const cloudData = await DriveService.loadData();
+      
+      console.log('Download received:', cloudData);
+      alert(`Download received: ${cloudData?.length || 0} items`);
+      
       if (cloudData) {
+        logDownloadComplete(cloudData);
+        
+        console.log('Setting products in state...');
+        alert('Setting products in state...');
         setProducts(cloudData);
+        
+        console.log('Saving to IndexedDB...');
+        alert('Saving to IndexedDB...');
         await IndexedDBService.save('ft-products', cloudData);
+        
+        console.log('Save complete!');
+        alert('✅ Sync complete successfully!');
+      } else {
+        alert('No data received from Drive');
       }
     } catch (e) {
       console.error("Cloud Load Error", e);
+      alert(`❌ Cloud sync error:\n${e.message}\n\nCheck: ${e.stack?.split('\n')[0] || 'No stack'}`);
+      ErrorLogger.log('SYNC_FROM_CLOUD', e);
     } finally {
       setSyncing(false);
+      console.log('Sync process ended');
     }
   };
 
