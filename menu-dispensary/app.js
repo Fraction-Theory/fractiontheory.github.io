@@ -346,7 +346,7 @@ const App = () => {
       alert(`Download received: ${cloudData?.length || 0} items`);
       
       if (cloudData) {
-        logDownloadComplete(cloudData);
+        console.log('[SYNC_FROM_CLOUD] Download Complete', cloudData);
         
         console.log('Setting products in state...');
         alert('Setting products in state...');
